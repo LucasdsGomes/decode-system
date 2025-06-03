@@ -75,7 +75,7 @@
                     <hr>
                     
                     <!-- Vigenère Cipher -->
-                    <div class="container">
+                    <div class="container mb-5">
                         <h4 class="my-3">Cifra de Vigenère - Vigenère Cipher</h4>
                         <p class="text-muted">A method of encrypting alphabetic text by using a series of interwoven Caesar ciphers, based on the letters of a keyword.</p>
                         <div class="form-floating mb-3 w-50">
@@ -94,6 +94,31 @@
                         <div class="mb-3 w-50">
                             <label class="form-label">Result</label>
                             <textarea class="form-control" id="vigenereResult" rows="3" disabled></textarea>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Columnar Transposition Cipher -->
+                    <div class="container">
+                        <h4 class="my-3">Cifra de Transposição Colunar - Columnar Transposition Cipher</h4>
+                        <p class="text-muted">A cipher that rearranges the plaintext by writing it in rows under a keyword and then reading the columns in alphabetical order of the keyword letters.</p>
+                        <div class="form-floating mb-3 w-50">
+                            <input type="text" class="form-control" id="columnarMessage" placeholder="Message">
+                            <label>Message</label>
+                        </div>
+                        <div class="form-floating w-50 mb-3">
+                            <input type="text" class="form-control" id="columnarKeyword" placeholder="Keyword">
+                            <label for="columnarKeyword">Keyword</label>
+                            
+                            <div class="mt-3">
+                                <button type="button" class="btn btn-outline-success" id="columnarEncode">Code</button>
+                                <button type="button" class="btn btn-outline-danger" id="columnarDecode">Decode</button>
+                            </div>
+                        </div>
+                        <div class="mb-3 w-50">
+                            <label class="form-label">Result</label>
+                            <textarea class="form-control" id="columnarResult" rows="3" disabled></textarea>
                         </div>
                     </div>
                 </div>
@@ -276,6 +301,97 @@
                 
                 return result.join('');
             }
+
+            // Columnar Transposition Cipher Implementation
+            document.getElementById('columnarEncode').addEventListener('click', function() {
+                const message = document.getElementById('columnarMessage').value;
+                const keyword = document.getElementById('columnarKeyword').value;
+                document.getElementById('columnarResult').value = columnarTranspositionCipher(message, keyword, true);
+            });
+
+            document.getElementById('columnarDecode').addEventListener('click', function() {
+                const message = document.getElementById('columnarMessage').value;
+                const keyword = document.getElementById('columnarKeyword').value;
+                document.getElementById('columnarResult').value = columnarTranspositionCipher(message, keyword, false);
+            });
+
+            function columnarTranspositionCipher(text, key, encode) {
+                // Validate key
+                if (!key || !key.length) return "Please enter a keyword";
+
+                // Remove non-alphabetic characters from key and convert to uppercase
+                const cleanKey = key.replace(/[^A-Za-z]/g, '').toUpperCase();
+                if (!cleanKey.length) return "Keyword must contain at least one letter";
+
+                // Create array of key characters and their original positions
+                const keyChars = cleanKey.split('').map((char, index) => ({
+                    char,
+                    index
+                }));
+
+                // Sort key characters to get reading order of columns
+                const sortedKeyChars = [...keyChars].sort((a, b) => {
+                    if (a.char === b.char) return a.index - b.index; // keep stability
+                    return a.char.localeCompare(b.char);
+                });
+
+                const keyLength = cleanKey.length;
+                const textLength = text.length;
+
+                if (encode) {
+                    // ENCODING
+                    const rows = Math.ceil(textLength / keyLength);
+                    const grid = [];
+
+                    for (let i = 0; i < rows; i++) {
+                        const start = i * keyLength;
+                        const row = text.slice(start, start + keyLength).split('');
+                        while (row.length < keyLength) row.push('X'); // Padding
+                        grid.push(row);
+                    }
+
+                    let ciphertext = '';
+                    for (let { index: col } of sortedKeyChars) {
+                        for (let row = 0; row < rows; row++) {
+                            ciphertext += grid[row][col];
+                        }
+                    }
+
+                    return ciphertext;
+                } else {
+                    // DECODING
+                    const rows = Math.ceil(textLength / keyLength);
+                    const cols = keyLength;
+                    const totalChars = rows * cols;
+
+                    const grid = Array.from({ length: rows }, () => Array(cols).fill(''));
+
+                    const numFullCols = textLength % keyLength;
+                    const colHeights = Array(keyLength).fill(Math.floor(textLength / keyLength));
+
+                    for (let i = 0; i < numFullCols; i++) {
+                        colHeights[sortedKeyChars[i].index]++;
+                    }
+
+                    let pos = 0;
+                    for (let { index: col } of sortedKeyChars) {
+                        const height = colHeights[col];
+                        for (let row = 0; row < height; row++) {
+                            grid[row][col] = text[pos++];
+                        }
+                    }
+
+                    let plaintext = '';
+                    for (let row = 0; row < rows; row++) {
+                        for (let col = 0; col < cols; col++) {
+                            plaintext += grid[row][col];
+                        }
+                    }
+
+                    return plaintext;
+                }
+}
+
         </script>
 
         <script src="js/scripts.js"></script>
