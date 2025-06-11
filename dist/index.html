@@ -100,7 +100,7 @@
                     <hr>
 
                     <!-- Columnar Transposition Cipher -->
-                    <div class="container">
+                    <div class="container mb-5">
                         <h4 class="my-3">Cifra de Transposição Colunar - Columnar Transposition Cipher</h4>
                         <p class="text-muted">A cipher that rearranges the plaintext by writing it in rows under a keyword and then reading the columns in alphabetical order of the keyword letters.</p>
                         <div class="form-floating mb-3 w-50">
@@ -119,6 +119,52 @@
                         <div class="mb-3 w-50">
                             <label class="form-label">Result</label>
                             <textarea class="form-control" id="columnarResult" rows="3" disabled></textarea>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- RSA Cipher -->
+                    <div class="container mb-5">
+                        <h4 class="my-3">Criptografia RSA</h4>
+                        <p class="text-muted">Algoritmo de criptografia assimétrica amplamente utilizado para segurança de dados.</p>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="number" class="form-control" id="rsaP" placeholder="Número primo p" value="11">
+                                    <label for="rsaP">Número primo p</label>
+                                </div>
+                                <div class="form-floating mb-3">
+                                    <input type="number" class="form-control" id="rsaQ" placeholder="Número primo q" value="17">
+                                    <label for="rsaQ">Número primo q</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="number" class="form-control" id="rsaE" placeholder="Chave pública e" value="23">
+                                    <label for="rsaE">Chave pública e</label>
+                                </div>
+                                <div class="form-floating mb-3">
+                                    <input type="number" class="form-control" id="rsaD" placeholder="Chave privada d" value="7">
+                                    <label for="rsaD">Chave privada d</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-floating mb-3 w-100">
+                            <input type="text" class="form-control" id="rsaMessage" placeholder="Message">
+                            <label>Message</label>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-outline-success" id="rsaEncode">Criptografar</button>
+                            <button type="button" class="btn btn-outline-danger" id="rsaDecode">Descriptografar</button>
+                        </div>
+                        
+                        <div class="mb-3 w-100 mt-3">
+                            <label class="form-label">Resultado</label>
+                            <textarea class="form-control" id="rsaResult" rows="3" disabled></textarea>
                         </div>
                     </div>
                 </div>
@@ -211,26 +257,19 @@
             });
 
             function caesarCipher(str, shift) {
-                // Handle negative shifts
                 shift = shift % 26;
                 if (shift < 0) shift += 26;
 
                 return str.split('').map(char => {
-                    // Check if char is a letter
                     if (/[a-zA-Z]/.test(char)) {
-                        // Get ASCII code
                         const code = char.charCodeAt(0);
-                        
-                        // Uppercase letters
                         if (code >= 65 && code <= 90) {
                             return String.fromCharCode(((code - 65 + shift) % 26) + 65);
                         }
-                        // Lowercase letters
                         else if (code >= 97 && code <= 122) {
                             return String.fromCharCode(((code - 97 + shift) % 26) + 97);
                         }
                     }
-                    // Return non-alphabetic characters as is
                     return char;
                 }).join('');
             }
@@ -249,52 +288,34 @@
             });
 
             function vigenereCipher(text, key, encode) {
-                // Make sure the key is valid
                 if (!key || !key.length) return "Please enter a keyword";
-                
-                // Make sure the key only has letters
                 if (!/^[A-Za-z]+$/.test(key)) return "Keyword should only contain letters";
                 
                 const result = [];
                 let keyIndex = 0;
-                
-                // Convert the key to uppercase to standardize
                 const uppercaseKey = key.toUpperCase();
                 
                 for (let i = 0; i < text.length; i++) {
                     const char = text[i];
                     
-                    // Only encrypt/decrypt letters
                     if (/[A-Za-z]/.test(char)) {
-                        // Get the ASCII base value (65 for A, 97 for a)
                         const isUpperCase = char === char.toUpperCase();
                         const base = isUpperCase ? 65 : 97;
-                        
-                        // Get the numerical value of the character (0-25)
                         const charValue = char.toUpperCase().charCodeAt(0) - 65;
-                        
-                        // Get the key character's value (0-25)
                         const keyChar = uppercaseKey[keyIndex % uppercaseKey.length];
                         const keyValue = keyChar.charCodeAt(0) - 65;
                         
-                        // Calculate the shift
                         let resultValue;
                         if (encode) {
-                            // Encrypt: Add values and take modulo 26
                             resultValue = (charValue + keyValue) % 26;
                         } else {
-                            // Decrypt: Subtract and handle negative values
                             resultValue = (charValue - keyValue + 26) % 26;
                         }
                         
-                        // Convert back to a character
                         const resultChar = String.fromCharCode(resultValue + base);
                         result.push(isUpperCase ? resultChar : resultChar.toLowerCase());
-                        
-                        // Move to the next key character
                         keyIndex++;
                     } else {
-                        // Non-alphabetic characters remain unchanged
                         result.push(char);
                     }
                 }
@@ -316,22 +337,17 @@
             });
 
             function columnarTranspositionCipher(text, key, encode) {
-                // Validate key
                 if (!key || !key.length) return "Please enter a keyword";
-
-                // Remove non-alphabetic characters from key and convert to uppercase
                 const cleanKey = key.replace(/[^A-Za-z]/g, '').toUpperCase();
                 if (!cleanKey.length) return "Keyword must contain at least one letter";
 
-                // Create array of key characters and their original positions
                 const keyChars = cleanKey.split('').map((char, index) => ({
                     char,
                     index
                 }));
 
-                // Sort key characters to get reading order of columns
                 const sortedKeyChars = [...keyChars].sort((a, b) => {
-                    if (a.char === b.char) return a.index - b.index; // keep stability
+                    if (a.char === b.char) return a.index - b.index;
                     return a.char.localeCompare(b.char);
                 });
 
@@ -339,14 +355,13 @@
                 const textLength = text.length;
 
                 if (encode) {
-                    // ENCODING
                     const rows = Math.ceil(textLength / keyLength);
                     const grid = [];
 
                     for (let i = 0; i < rows; i++) {
                         const start = i * keyLength;
                         const row = text.slice(start, start + keyLength).split('');
-                        while (row.length < keyLength) row.push('X'); // Padding
+                        while (row.length < keyLength) row.push('X');
                         grid.push(row);
                     }
 
@@ -359,7 +374,6 @@
 
                     return ciphertext;
                 } else {
-                    // DECODING
                     const rows = Math.ceil(textLength / keyLength);
                     const cols = keyLength;
                     const totalChars = rows * cols;
@@ -390,8 +404,100 @@
 
                     return plaintext;
                 }
-}
+            }
 
+            // RSA Cipher Implementation
+            document.getElementById('rsaEncode').addEventListener('click', function() {
+                const message = document.getElementById('rsaMessage').value;
+                const p = parseInt(document.getElementById('rsaP').value);
+                const q = parseInt(document.getElementById('rsaQ').value);
+                const e = parseInt(document.getElementById('rsaE').value);
+                
+                if (!isPrime(p) || !isPrime(q)) {
+                    document.getElementById('rsaResult').value = "p e q devem ser números primos!";
+                    return;
+                }
+                
+                const n = p * q;
+                const phi = (p - 1) * (q - 1);
+                
+                if (gcd(e, phi) !== 1) {
+                    document.getElementById('rsaResult').value = "e deve ser coprimo com φ(n) = " + phi;
+                    return;
+                }
+                
+                const encrypted = rsaEncrypt(message, e, n);
+                document.getElementById('rsaResult').value = encrypted.join(' ');
+            });
+
+            document.getElementById('rsaDecode').addEventListener('click', function() {
+                const encryptedText = document.getElementById('rsaMessage').value;
+                const p = parseInt(document.getElementById('rsaP').value);
+                const q = parseInt(document.getElementById('rsaQ').value);
+                const d = parseInt(document.getElementById('rsaD').value);
+                
+                if (!isPrime(p) || !isPrime(q)) {
+                    document.getElementById('rsaResult').value = "p e q devem ser números primos!";
+                    return;
+                }
+                
+                const n = p * q;
+                const encrypted = encryptedText.split(' ').map(Number);
+                
+                const decrypted = rsaDecrypt(encrypted, d, n);
+                document.getElementById('rsaResult').value = decrypted;
+            });
+
+            // Função para calcular exponenciação modular eficientemente
+            function modExp(base, exp, modulus) {
+                let result = 1;
+                base = base % modulus;
+                while (exp > 0) {
+                    if (exp % 2 === 1) {
+                        result = (result * base) % modulus;
+                    }
+                    exp = Math.floor(exp / 2);
+                    base = (base * base) % modulus;
+                }
+                return result;
+            }
+
+            // Função para verificar se um número é primo
+            function isPrime(num) {
+                if (num <= 1) return false;
+                if (num <= 3) return true;
+                if (num % 2 === 0 || num % 3 === 0) return false;
+                for (let i = 5; i * i <= num; i += 6) {
+                    if (num % i === 0 || num % (i + 2) === 0) return false;
+                }
+                return true;
+            }
+
+            // Função para calcular MDC (Maior Divisor Comum)
+            function gcd(a, b) {
+                while (b !== 0) {
+                    let temp = b;
+                    b = a % b;
+                    a = temp;
+                }
+                return a;
+            }
+
+            // Função para criptografar com RSA
+            function rsaEncrypt(message, e, n) {
+                return message.split('').map(char => {
+                    const m = char.charCodeAt(0);
+                    return modExp(m, e, n);
+                });
+            }
+
+            // Função para descriptografar com RSA
+            function rsaDecrypt(encrypted, d, n) {
+                return encrypted.map(c => {
+                    const m = modExp(c, d, n);
+                    return String.fromCharCode(m);
+                }).join('');
+            }
         </script>
 
         <script src="js/scripts.js"></script>
